@@ -11,13 +11,12 @@ import (
 )
 
 type TFTPServer struct {
-	// Whether to accept WriteRequest or not
 	WriteAllowed bool
-	// Where to save the files
-	WriteDir string
-	Payload  []byte
-	Retries  uint8
-	Timeout  time.Duration
+	ReadAllowed  bool
+	WriteDir     string
+	Payload      []byte
+	Retries      uint8
+	Timeout      time.Duration
 }
 
 // Blocking function
@@ -61,18 +60,24 @@ func (s *TFTPServer) Serve(conn net.PacketConn) error {
 
 		err = rrq.UnmarshalBinary(buf)
 		if err == nil {
-			go s.handleRead(addr.String(), rrq)
-			continue
+			if !s.ReadAllowed {
+				data, _ := Err{Error: ErrIllegalOp, Message: "Read is not allowed"}.MarshalBinary()
+				_, _ = conn.WriteTo(data, addr)
+			} else {
+				go s.handleRead(addr.String(), rrq)
+				continue
+			}
 		}
 
 		err = wrq.UnmarshalBinary(buf)
 		if err == nil {
-			if s.WriteAllowed == false {
-				data, _ := Err{Error: ErrIllegalOp, Message: "We don't accept write requests"}.MarshalBinary()
+			if !s.WriteAllowed {
+				data, _ := Err{Error: ErrIllegalOp, Message: "Write is not allowed"}.MarshalBinary()
 				_, _ = conn.WriteTo(data, addr)
+			} else {
+				go s.handleWrite(addr.String(), wrq)
+				continue
 			}
-			go s.handleWrite(addr.String(), wrq)
-			continue
 		}
 
 		log.Printf("[%s] bad request: %v", addr, err)

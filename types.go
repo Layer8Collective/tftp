@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	// Entire tftp datagram size (without headers and trailers)
+	// Entire tftp datagram size
 	DatagramSize = 516
-	// the amount of data, in bytes, transferred in a single packet(without headers)
+	// the amount of data, in bytes, transferred in a single packet(without the headers)
 	BlockSize = DatagramSize - 4
 )
 

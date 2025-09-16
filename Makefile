@@ -7,3 +7,7 @@ writerun:
 
 test: 
 	go test ./...
+
+
+build:
+	go build -o tftp.out ./cmd/tftp.go 
